@@ -1,9 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
-
 
 from posts.models import Comment, Group, Follow, Post
 
@@ -57,12 +55,11 @@ class FollowSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, data):
-        user = get_object_or_404(User, username=data['following'].username)
-        follow = Follow.objects.filter(
-            user=self.context['request'].user, following=user).exists()
-        if follow:
+        user = self.context['request'].user
+        if user == data:
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого автора!')
-        elif user == self.context['request'].user:
-            raise serializers.ValidationError('Нельзя подписаться на себя!')
+        elif user == data['following']:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на себя!')
         return data
